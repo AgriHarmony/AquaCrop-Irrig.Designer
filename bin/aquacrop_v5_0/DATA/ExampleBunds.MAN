@@ -1,0 +1,7 @@
+Soil bunds, 0.25 m height
+     3.0       : AquaCrop Version (January 2009)
+     0         : percentage (%) of ground surface covered by mulches IN growing period
+    50         : effect (%) of mulches on reduction of soil evaporation
+     0         : Non-limiting soil fertility
+     0.25      : heigth (m) of soil bunds
+     1         : surface runoff prevented by field surface practices

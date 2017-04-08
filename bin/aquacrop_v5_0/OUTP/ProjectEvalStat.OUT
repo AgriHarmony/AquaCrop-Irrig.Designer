@@ -1,0 +1,69 @@
+AquaCrop 5.0 (October 2015) - Output created on (date) : 23/10/2015   at (time) : 10:39:54
+Evaluation of simulation results - Statistics
+
+
+  ASSESSMENT OF CANOPY COVER --------------------------------------
+              --------- Canopy Cover (%) ---------
+    Nr        Observed    +/- St Dev     Simulated    Date
+  ----------------------------------------------------------------
+     1           5.0           3.0           3.0       1 April 
+     2          30.0           5.0          44.0      20 April 
+     3          50.0          -9.0          57.0      30 April 
+     4          60.0           5.0          57.0      10 May 
+     5          45.0           6.0          35.5       9 July 
+
+  Valid observations/simulations sets (n) ....... :     5
+  Average of observed Canopy Cover .............. :    38.0   %
+  Average of simulated Canopy Cover ............. :    39.3   %
+
+  Pearson Correlation Coefficient (r) ........... :     0.91
+  Root mean square error (RMSE) ................. :     8.3   % CC
+  Normalized root mean square error  CV(RMSE).... :    22.0   %
+  Nash-Sutcliffe model efficiency coefficient (EF):     0.81
+  Willmotts index of agreement (d) .............. :     0.95
+  ----------------------------------------------------------------
+
+
+  ASSESSMENT OF BIOMASS PRODUCTION --------------------------------
+              --------- Biomass (ton/ha) ---------
+    Nr        Observed    +/- St Dev     Simulated    Date
+  ----------------------------------------------------------------
+     1           1.000         0.300         0.940      20 April 
+     2           4.000         0.200         3.961       1 June 
+     3           4.400         0.300         4.613      19 June 
+     4           5.000         0.500         5.084       9 July 
+     5           5.500         0.500         5.103      19 July 
+
+  Valid observations/simulations sets (n) ....... :     5
+  Average of observed Biomass production ........ :     3.980   ton/ha
+  Average of simulated Biomass production ....... :     3.940   ton/ha
+
+  Pearson Correlation Coefficient (r) ........... :     0.99
+  Root mean square error (RMSE) ................. :     0.207   ton/ha
+  Normalized root mean square error  CV(RMSE).... :     5.2   %
+  Nash-Sutcliffe model efficiency coefficient (EF):     0.98
+  Willmotts index of agreement (d) .............. :     1.00
+  ----------------------------------------------------------------
+
+
+  ASSESSMENT OF SOIL WATER CONTENT --------------------------------
+              ------ Soil water content (mm) -----
+    Nr        Observed    +/- St Dev     Simulated    Date
+  ----------------------------------------------------------------
+     1         300.0          20.0         280.8       1 April 
+     2         250.0          25.0         215.9      30 April 
+     3         150.0          30.0         159.6       1 June 
+     4         100.0          10.0         125.9       9 July 
+     5         100.0          10.0         125.0      19 July 
+
+  Valid observations/simulations sets (n) ....... :     5
+  Average of observed Soil water content ........ :   180.0   mm
+  Average of simulated Soil water content ....... :   181.4   mm
+
+  Pearson Correlation Coefficient (r) ........... :     0.99
+  Root mean square error (RMSE) ................. :    24.2   mm
+  Normalized root mean square error  CV(RMSE).... :    13.4   %
+  Nash-Sutcliffe model efficiency coefficient (EF):     0.91
+  Willmotts index of agreement (d) .............. :     0.97
+  ----------------------------------------------------------------
+
