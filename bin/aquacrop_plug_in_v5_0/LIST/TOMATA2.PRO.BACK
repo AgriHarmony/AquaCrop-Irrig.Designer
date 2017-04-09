@@ -2,7 +2,7 @@
       5.0       : AquaCrop Version (October 2015)
   34780         : First day of simulation period - 22 March 1996    
   34781 : Last day of simulation period - 9 July 1996      
-34782 :  First day of cropping period - 22 March 1996    
+  34780         : First day of cropping period - 22 March 1996    
   34889         : Last day of cropping period - 9 July 1996      
       4         : Evaporation decline factor for stage II
       1.10      : Ke(x) Soil evaporation coefficient for fully wet and non-shaded soil surface
