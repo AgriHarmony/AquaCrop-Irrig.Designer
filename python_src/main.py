@@ -1,9 +1,9 @@
-#! ../ENV_PY3/bin/python3
+#! ../MAC_ENV_PY3/bin/python3
 import subprocess
 import os
 from pathlib import Path
 
-prefix = '../LIST/'
+prefix = '../bin/aquacrop_plug_in_v5_0/LIST/'
 
 
 def isfloat(x):
@@ -81,12 +81,13 @@ def writeDotPROFile( fileName, lineNum, contentStr ):
 
 if __name__ == "__main__":
     
+    dotPROName = 'TOMATA2.PRO'
     ## Initialization
     # Copy a .PRO backup with .PRO.BACKUP
-    copyDotPROFile('test.PRO')
+    copyDotPROFile( dotPROName )
 
     # Store the end of simu-day to variable to control simulation loop
-    configList = readDotPROFile('test.PRO')
+    configList = readDotPROFile( dotPROName )
     
     firstSimuDay = int(configList[2])
     lastSimuDay =  int(configList[3])
@@ -96,7 +97,7 @@ if __name__ == "__main__":
     # Set Initial simu-day and crop-day in .PRO with frist Day+1 day interval
     IntervalFirstSimuDay = firstSimuDay
     IntervalLastSimuDay = firstSimuDay + 1
-    writeDotPROFile( 'test.PRO', 4, str( IntervalLastSimuDay ) )
+    writeDotPROFile( dotPROName, 4, str( IntervalLastSimuDay ) )
     
     ## loop Simulate with daily time step
     while( IntervalLastSimuDay <= lastSimuDay ):
