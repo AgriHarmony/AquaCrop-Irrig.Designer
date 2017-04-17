@@ -1,10 +1,11 @@
-#! ../MAC_ENV_PY3/bin/python3
+
 import subprocess
 import os
+import numpy as np
 from pathlib import Path
 
 prefix = '../bin/aquacrop_plug_in_v5_0/LIST/'
-
+prefixOut = '../bin/aquacrop_plug_in_v5_0/OUTP/'
 
 def isfloat(x):
     try:
@@ -73,7 +74,7 @@ def writeDotPROFile( fileName, lineNum, contentStr ):
     if lineNum < len(lines) :
         seg2 = lines[lineNum].split(':')[1] 
         lines[lineNum] = contentStr + ' : ' +  seg2
-        print ( lines[lineNum] )
+        # print ( lines[lineNum] )
     f.close()
     out = open( sourceFilePath, 'w' )
     out.writelines( lines )
@@ -81,7 +82,17 @@ def writeDotPROFile( fileName, lineNum, contentStr ):
 
 if __name__ == "__main__":
     
-    dotPROName = 'TOMATA2.PRO'
+    # File Name
+    Name = 'TOMATO2'
+    PROExt = '.PRO'
+    dotPROName = Name + PROExt
+
+    OUTExt = '.OUT'
+    dotOUTName = Name + 'PROday' + OUTExt
+
+    # Location
+    pluginExeLocation = r'D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_plug_in_v5_0\ACsaV50.exe'
+
     ## Initialization
     # Copy a .PRO backup with .PRO.BACKUP
     copyDotPROFile( dotPROName )
@@ -95,19 +106,34 @@ if __name__ == "__main__":
     lastCropDay =  int(configList[5])
     
     # Set Initial simu-day and crop-day in .PRO with frist Day+1 day interval
-    IntervalFirstSimuDay = firstSimuDay
-    IntervalLastSimuDay = firstSimuDay + 1
-    writeDotPROFile( dotPROName, 4, str( IntervalLastSimuDay ) )
+    # IntervalFirstSimuDay = firstSimuDay
+    # IntervalLastSimuDay = firstSimuDay + 1
+    # writeDotPROFile( dotPROName, 4, str( IntervalLastSimuDay ) )
     
+
+    ## Do First Simulation to generate whole moisture(VWC) variation
+    subprocess.call([pluginExeLocation])    
+    # Trace the input depth of moisture value 
+        # If moisture condition triggers irrigation event, controller to generate irrigation amount 
+    
+    dayData = np.loadtxt( prefixOut + dotOUTName )
+    print( dayData )
+        # Write to Example.Irr file
+        # if the currentSimuDay is not reach the lastSimuDay in config
+            # Re-simulation the whole procces ()
+        # otherwise, terminate the simulation
+
+
+
     ## loop Simulate with daily time step
-    while( IntervalLastSimuDay <= lastSimuDay ):
+    # while( IntervalLastSimuDay <= lastSimuDay ):
 
-
+        # print ( str(IntervalLastSimuDay) + "\n")
         # Wrtie control preidction Irrgiation to file
     
         # Execute AquaCrop-Plugin
         
         # Move the simulation time windows to next day interval in .PRO
-        IntervalFirstSimuDay += 1
-        IntervalLastSimuDay += 1
+        # IntervalFirstSimuDay += 1
+        # IntervalLastSimuDay += 1
     
