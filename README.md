@@ -3,7 +3,8 @@ a simulation tool base on python code executing aquacrop-plugin exeutable
 
 # Environment
 
-- Windows Platform for .exe executing ( Linux and Mac you can use wine but I do not test it before")
+- Windows Platform for .exe executing ( Linux and Mac you can use wine but I do not test it before )
+  - I high recommend (anaconda)[https://www.continuum.io/downloads] as python platfrom toolkit
 - Python3.6
 
 # Usage
