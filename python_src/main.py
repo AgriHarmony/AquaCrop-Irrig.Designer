@@ -2,10 +2,16 @@
 import subprocess
 import os
 import numpy as np
+
 from pathlib import Path
 
 prefix = '../bin/aquacrop_plug_in_v5_0/LIST/'
-prefixOut = '../bin/aquacrop_plug_in_v5_0/OUTP/'
+prefixOUT = '../bin/aquacrop_plug_in_v5_0/OUTP/'
+prefixIRR = '../bin/aquacrop_v5_0/DATA/'
+
+
+# Location
+pluginExeLocation = r'D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_plug_in_v5_0\ACsaV50.exe'
 
 def isfloat(x):
     try:
@@ -63,7 +69,7 @@ def readDotPROFile( fileName ):
     f.close()
     return configList
 
-def writeDotPROFile( fileName, lineNum, contentStr ):
+def replaceDotPRObyLine( fileName, lineNum, contentStr ):
     # lineNum is start with index = 0
 
     sourceFilePath = Path(prefix+fileName).resolve()
@@ -71,6 +77,7 @@ def writeDotPROFile( fileName, lineNum, contentStr ):
     f = open( sourceFilePath, 'r+' )
     
     lines = f.readlines()
+    # ensure the lineNum should be existed contents
     if lineNum < len(lines) :
         seg2 = lines[lineNum].split(':')[1] 
         lines[lineNum] = contentStr + ' : ' +  seg2
@@ -79,7 +86,39 @@ def writeDotPROFile( fileName, lineNum, contentStr ):
     out = open( sourceFilePath, 'w' )
     out.writelines( lines )
     out.close()
+def appendDotIRR( fileName, day, irriAmount ):
+    
+    sourceFilePath = Path( prefixIRR + fileName ).resolve()
+    print ( sourceFilePath )
 
+    with open( sourceFilePath, 'a') as f:
+        irriEventStr = '\n{:6d} {:9.1f} {:12.1f}'.format( day, irriAmount, 0)
+        f.write( irriEventStr )
+def executeAquaCropPlugin():
+     subprocess.call([pluginExeLocation])
+
+def mockControllerBySI( wc1, wc2 ):
+
+    kp = 1.5
+    ki = 0
+    kd = 0
+
+    ref1 = 25
+    ref2 = 17
+
+    e1 = ref1 - wc1
+    e2 = ref2 - wc2
+
+    irri = e1*kp
+
+    if irri < 0:
+        irri = 0
+    elif irri > 120:
+        irri = 120
+
+    return irri
+
+     
 if __name__ == "__main__":
     
     # File Name
@@ -90,8 +129,7 @@ if __name__ == "__main__":
     OUTExt = '.OUT'
     dotOUTName = Name + 'PROday' + OUTExt
 
-    # Location
-    pluginExeLocation = r'D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_plug_in_v5_0\ACsaV50.exe'
+
 
     ## Initialization
     # Copy a .PRO backup with .PRO.BACKUP
@@ -99,41 +137,60 @@ if __name__ == "__main__":
 
     # Store the end of simu-day to variable to control simulation loop
     configList = readDotPROFile( dotPROName )
+    # print( configList )
+
+    firstSimuDay = int(configList[1])
+    lastSimuDay =  int(configList[2])
+    firstCropDay =  int(configList[3])
+    lastCropDay =  int(configList[4])
     
-    firstSimuDay = int(configList[2])
-    lastSimuDay =  int(configList[3])
-    firstCropDay =  int(configList[4])
-    lastCropDay =  int(configList[5])
-    
+    # print( 'firstSimuDay:{}'.format( firstSimuDay ) )
+    # print( 'lastSimuDay:{}'.format( lastSimuDay ) )
     # Set Initial simu-day and crop-day in .PRO with frist Day+1 day interval
     # IntervalFirstSimuDay = firstSimuDay
     # IntervalLastSimuDay = firstSimuDay + 1
-    # writeDotPROFile( dotPROName, 4, str( IntervalLastSimuDay ) )
+    # replaceDotPRObyLine( dotPROName, 4, str( IntervalLastSimuDay ) )
     
 
     ## Do First Simulation to generate whole moisture(VWC) variation
-    subprocess.call([pluginExeLocation])    
-    # Trace the input depth of moisture value 
+    executeAquaCropPlugin()
+    pathOUT = prefixOUT + dotOUTName
+    dailyData = np.loadtxt( pathOUT, skiprows=4 )
+    
+
+    ## PROday.OUT index Memo
+    rainIdx = 6
+    irrIdx = 7
+    WC1Idx = 62
+    WC2Idx = 63
+
+    currentSimuDay = firstSimuDay
+    dailyDatPointer = 0
+    while( currentSimuDay < lastSimuDay ):
+        print ( 'CurrentSimuDay: {}\n'.format( currentSimuDay ) )
+        print ( 'dailyDatPointer: {}\n'.format( dailyDatPointer ) )
+    #    # if the currentSimuDay reach the lastSimuDay in config,  terminate the simulation
+    #     if currentSimuDay == lastSimuDay:
+    #         break
+
+        dailyData = np.loadtxt( pathOUT, skiprows=4 )
+        row = dailyData[ dailyDatPointer ]
+        wc1 = row[ WC1Idx ]
+        wc2 = row[ WC2Idx ]
+        print( 'wc1: {}, wc2: {} \n'.format( wc1, wc2 ))
+
         # If moisture condition triggers irrigation event, controller to generate irrigation amount 
-    
-    dayData = np.loadtxt( prefixOut + dotOUTName )
-    print( dayData )
-        # Write to Example.Irr file
-        # if the currentSimuDay is not reach the lastSimuDay in config
+        predictedIrri = mockControllerBySI( wc1, wc2 )
+        print( 'Irri: {}\n'.format( predictedIrri ))
+
+        if predictedIrri > 0:
+            # Append Irrigatio Event into Example.Irr
+            irriDay = dailyDatPointer + 1
+            appendDotIRR('Example.Irr', irriDay, predictedIrri )
+
             # Re-simulation the whole procces ()
-        # otherwise, terminate the simulation
+            executeAquaCropPlugin()
 
+        currentSimuDay = currentSimuDay + 1
+        dailyDatPointer = dailyDatPointer + 1
 
-
-    ## loop Simulate with daily time step
-    # while( IntervalLastSimuDay <= lastSimuDay ):
-
-        # print ( str(IntervalLastSimuDay) + "\n")
-        # Wrtie control preidction Irrgiation to file
-    
-        # Execute AquaCrop-Plugin
-        
-        # Move the simulation time windows to next day interval in .PRO
-        # IntervalFirstSimuDay += 1
-        # IntervalLastSimuDay += 1
-    
