@@ -1,3 +1,13 @@
+# VirtualEnv
+MAC_ENV_PY3
+
+# python code output 
 output/
-__pycache__
-bin/
+
+# python library load cache
+*.pyc
+
+# bin input
+bin/aquacrop_plgu_in_v5_0/LIST
+# bin output
+bin/aquacrop_plgu_in_v5_0/OUTP
