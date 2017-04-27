@@ -2,7 +2,7 @@
 import subprocess
 import os
 import numpy as np
-
+from Controller.MIController import MIController
 from pathlib import Path
 
 prefix = '../bin/aquacrop_plug_in_v5_0/LIST/'
@@ -30,8 +30,7 @@ def isint(x):
     else:
         return a == b
 
-def copyDotPROFile( fileName ):
-    
+def copyDotPROFile(fileName):
     # find source file path
     sourceFilePath = Path( prefix+fileName ).resolve()
     soruceFile = Path( sourceFilePath )
@@ -46,8 +45,7 @@ def copyDotPROFile( fileName ):
         os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
 
 
-def readDotPROFile( fileName ):
-    
+def readDotPROFile(fileName):
     configList = []
     lineCnt = 0
     sourceFilePath = Path(prefix+fileName).resolve()
@@ -58,18 +56,18 @@ def readDotPROFile( fileName ):
             if lineCnt >= 26:
                 break
             if line is not "\n":
-                el = line.split(':')[0].strip();
+                el = line.split(':')[0].strip()
                 if isfloat( el ):
                     configList.append( float( el ) )
                 elif isint( el ):
                     configList.append( int( el ) )  
         
                
-            lineCnt = lineCnt + 1;
+            lineCnt = lineCnt + 1
     f.close()
     return configList
 
-def replaceDotPRObyLine( fileName, lineNum, contentStr ):
+def replaceDotPRObyLine(fileName, lineNum, contentStr):
     # lineNum is start with index = 0
 
     sourceFilePath = Path(prefix+fileName).resolve()
@@ -97,7 +95,7 @@ def appendDotIRR( fileName, day, irriAmount ):
 def executeAquaCropPlugin():
      subprocess.call([pluginExeLocation])
 
-def mockControllerBySI( wc1, wc2 ):
+def mockControllerBySI( wc1 ):
 
     kp = 1.5
     ki = 0
@@ -107,7 +105,6 @@ def mockControllerBySI( wc1, wc2 ):
     ref2 = 17
 
     e1 = ref1 - wc1
-    e2 = ref2 - wc2
 
     irri = e1*kp
 
@@ -128,8 +125,6 @@ if __name__ == "__main__":
 
     OUTExt = '.OUT'
     dotOUTName = Name + 'PROday' + OUTExt
-
-
 
     ## Initialization
     # Copy a .PRO backup with .PRO.BACKUP
@@ -163,34 +158,46 @@ if __name__ == "__main__":
     irrIdx = 7
     WC1Idx = 62
     WC2Idx = 63
+    
+    # Initialization MIController
+    mic = MIController() 
 
     currentSimuDay = firstSimuDay
-    dailyDatPointer = 0
+    dailyDataPointer = 0
     while( currentSimuDay < lastSimuDay ):
-        print ( 'CurrentSimuDay: {}\n'.format( currentSimuDay ) )
-        print ( 'dailyDatPointer: {}\n'.format( dailyDatPointer ) )
-    #    # if the currentSimuDay reach the lastSimuDay in config,  terminate the simulation
-    #     if currentSimuDay == lastSimuDay:
-    #         break
+
+        # print ( 'CurrentSimuDay: {}\n'.format( currentSimuDay ) )
+        # print ( 'dailyDataPointer: {}\n'.format( dailyDataPointer ) )
 
         dailyData = np.loadtxt( pathOUT, skiprows=4 )
-        row = dailyData[ dailyDatPointer ]
+        row = dailyData[ dailyDataPointer ]
         wc1 = row[ WC1Idx ]
         wc2 = row[ WC2Idx ]
-        print( 'wc1: {}, wc2: {} \n'.format( wc1, wc2 ))
+        # print( 'wc1: {}, wc2: {} \n'.format( wc1, wc2 ))
+
+        # Record State
+        mic.update( wc1, wc2, dailyDataPointer )
+
 
         # If moisture condition triggers irrigation event, controller to generate irrigation amount 
-        predictedIrri = mockControllerBySI( wc1, wc2 )
-        print( 'Irri: {}\n'.format( predictedIrri ))
+        predictedIrri = mockControllerBySI( wc1 )
+        print( 'Irri: {}\n'.format( str(predictedIrri) ))
+
 
         if predictedIrri > 0:
             # Append Irrigatio Event into Example.Irr
-            irriDay = dailyDatPointer + 1
+            irriDay = dailyDataPointer + 1
             appendDotIRR('Example.Irr', irriDay, predictedIrri )
 
             # Re-simulation the whole procces ()
             executeAquaCropPlugin()
 
         currentSimuDay = currentSimuDay + 1
-        dailyDatPointer = dailyDatPointer + 1
+        dailyDataPointer = dailyDataPointer + 1
 
+
+    stateRecord = mic.getStateRecord()
+    with open(r'../output/state_record.txt','w') as outFile:
+        for row in stateRecord:
+            outFile.write( 'state: {}, simuDay: {}\n'.format( row['state'], row['simuDay'] ) ) 
+    # Copy the daily and seasonal data to output
