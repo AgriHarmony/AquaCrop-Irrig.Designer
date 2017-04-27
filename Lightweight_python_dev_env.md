@@ -2,7 +2,8 @@
 
 1. [Anaconda](https://www.continuum.io/downloads)
 2. [Sublime Text 3](https://www.sublimetext.com/3) ( Due to performance consideration )
-3. Sublime Text Recommanded plugin
+
+Sublime Text Recommanded plugin
 - [Anaconda for ST3 plugin](http://damnwidget.github.io/anaconda/#carousel-features)
 - Others useful package
  
