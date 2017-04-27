@@ -13,7 +13,7 @@ We had trid using wine to execute AquaCrop_plugin, But it stuck with prompt wind
 Therefore, We suggest install Virtual Machine ( Oracle Virtual Box ... etc ) with Windows environment to execute our codes
 
 If you need a lightweight developing environment for windows virtual mahcine, checkout this
-- (Lightweight_python_dev_env.md)[https://github.com/AgriHarmony/AquaCrop-Irrig.Designer/blob/master/Lightweight_python_dev_env.md]
+- [Lightweight_python_dev_env.md](https://github.com/AgriHarmony/AquaCrop-Irrig.Designer/blob/master/Lightweight_python_dev_env.md)
 # Usage
 
 1. Open bin/aquacrop_v5_0/AquaCrop.exe and set up the simulation
