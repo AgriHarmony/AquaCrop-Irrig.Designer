@@ -11,3 +11,5 @@ output/
 bin/aquacrop_plgu_in_v5_0/LIST
 # bin output
 bin/aquacrop_plgu_in_v5_0/OUTP
+
+*.OUT
