@@ -44,8 +44,8 @@
    Tomato.CRO
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
 -- 3. Irrigation management (IRR) file
-   Irrigation.Irr
-   D:\yk_research\AquaCrop-Irrigation-Design\input
+   Example.Irr
+   D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
 -- 4. Field management (MAN) file
    ModerateSF.MAN
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\

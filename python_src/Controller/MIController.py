@@ -24,8 +24,8 @@ class MIController():
         self.output = 0
 
         self.stateRecord = []
-        self.stateDefintion = ['shallow: wet, deeper: wet','shallow: dry, deeper: wet', \
-                    'shallow: dry, deeper: dry', 'shallow: dry, deeper: wet']
+        self.stateDefintion = ['shallow, wet, deeper, wet','shallow, dry, deeper, wet', \
+                    'shallow, dry, deeper, dry', 'shallow, dry, deeper, wet']
 
     def setK( self, kp, ki, kd ):
 

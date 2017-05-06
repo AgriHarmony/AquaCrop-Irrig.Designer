@@ -1,164 +1,53 @@
 
-import subprocess
-import os
 import numpy as np
+import helper as helper
 from Controller.MIController import MIController
-from pathlib import Path
-
-prefix = '../bin/aquacrop_plug_in_v5_0/LIST/'
-prefixOUT = '../bin/aquacrop_plug_in_v5_0/OUTP/'
-prefixIRR = '../bin/aquacrop_v5_0/DATA/'
+from settings import ConfigHolder
 
 
-# Location
-pluginExeLocation = r'D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_plug_in_v5_0\ACsaV50.exe'
-
-def isfloat(x):
-    try:
-        a = float(x)
-    except ValueError:
-        return False
-    else:
-        return True
-
-def isint(x):
-    try:
-        a = float(x)
-        b = int(a)
-    except ValueError:
-        return False
-    else:
-        return a == b
-
-def copyDotPROFile(fileName):
-    # find source file path
-    sourceFilePath = Path( prefix+fileName ).resolve()
-    soruceFile = Path( sourceFilePath )
-    
-    # Generate target file path
-    parentDirPath = os.path.dirname ( sourceFilePath )
-    targetFilePath = parentDirPath + '/' + fileName + '.BACK'
-    targetFile = Path( targetFilePath )
-
-    # check file source is exist and file target is not exist 
-    if soruceFile.is_file() and not targetFile.is_file():
-        os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
-
-
-def readDotPROFile(fileName):
-    configList = []
-    lineCnt = 0
-    sourceFilePath = Path(prefix+fileName).resolve()
-    
-    with open( sourceFilePath, 'r' ) as f:
-        for line in f.readlines():
-            
-            if lineCnt >= 26:
-                break
-            if line is not "\n":
-                el = line.split(':')[0].strip()
-                if isfloat( el ):
-                    configList.append( float( el ) )
-                elif isint( el ):
-                    configList.append( int( el ) )  
-        
-               
-            lineCnt = lineCnt + 1
-    f.close()
-    return configList
-
-def replaceDotPRObyLine(fileName, lineNum, contentStr):
-    # lineNum is start with index = 0
-
-    sourceFilePath = Path(prefix+fileName).resolve()
-    print ( sourceFilePath )
-    f = open( sourceFilePath, 'r+' )
-    
-    lines = f.readlines()
-    # ensure the lineNum should be existed contents
-    if lineNum < len(lines) :
-        seg2 = lines[lineNum].split(':')[1] 
-        lines[lineNum] = contentStr + ' : ' +  seg2
-        # print ( lines[lineNum] )
-    f.close()
-    out = open( sourceFilePath, 'w' )
-    out.writelines( lines )
-    out.close()
-def appendDotIRR( fileName, day, irriAmount ):
-    
-    sourceFilePath = Path( prefixIRR + fileName ).resolve()
-    print ( sourceFilePath )
-
-    with open( sourceFilePath, 'a') as f:
-        irriEventStr = '\n{:6d} {:9.1f} {:12.1f}'.format( day, irriAmount, 0)
-        f.write( irriEventStr )
-def executeAquaCropPlugin():
-     subprocess.call([pluginExeLocation])
-
-def mockControllerBySI( wc1 ):
-
-    kp = 1.5
-    ki = 0
-    kd = 0
-
-    ref1 = 25
-    ref2 = 17
-
-    e1 = ref1 - wc1
-
-    irri = e1*kp
-
-    if irri < 0:
-        irri = 0
-    elif irri > 120:
-        irri = 120
-
-    return irri
-
-     
 if __name__ == "__main__":
-    
-    # File Name
-    Name = 'TOMATO2'
+    cfgHolder = ConfigHolder()
+    config = cfgHolder.get()
+    prefixLIST = config['path_prefix']['AC_plugin_LIST']
+    prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
+    prefixIRR = config['path_prefix']['AC_DATA']
+
+    # File name
+    name = 'TOMATO2'
     PROExt = '.PRO'
-    dotPROName = Name + PROExt
+    dotPROName = name + PROExt
 
     OUTExt = '.OUT'
-    dotOUTName = Name + 'PROday' + OUTExt
+    dotOUTName = name + 'PROday' + OUTExt
 
     ## Initialization
     # Copy a .PRO backup with .PRO.BACKUP
-    copyDotPROFile( dotPROName )
+    helper.copyDotPROFile( dotPROName )
 
     # Store the end of simu-day to variable to control simulation loop
-    configList = readDotPROFile( dotPROName )
+    configList = helper.readDotPROFile( dotPROName )
     # print( configList )
 
     firstSimuDay = int(configList[1])
     lastSimuDay =  int(configList[2])
     firstCropDay =  int(configList[3])
     lastCropDay =  int(configList[4])
-    
     # print( 'firstSimuDay:{}'.format( firstSimuDay ) )
     # print( 'lastSimuDay:{}'.format( lastSimuDay ) )
-    # Set Initial simu-day and crop-day in .PRO with frist Day+1 day interval
-    # IntervalFirstSimuDay = firstSimuDay
-    # IntervalLastSimuDay = firstSimuDay + 1
-    # replaceDotPRObyLine( dotPROName, 4, str( IntervalLastSimuDay ) )
-    
 
     ## Do First Simulation to generate whole moisture(VWC) variation
-    executeAquaCropPlugin()
-    pathOUT = prefixOUT + dotOUTName
+    helper.cleanExampleDotIrrFile()
+    helper.executeAquaCropPlugin()
+    pathOUT = prefixOUTP + dotOUTName
     dailyData = np.loadtxt( pathOUT, skiprows=4 )
-    
 
-    ## PROday.OUT index Memo
-    rainIdx = 6
-    irrIdx = 7
-    WC1Idx = 62
-    WC2Idx = 63
     
+    ## PROday.OUT index Memo
+    WC1Idx = config['day_data_index']['wc1']
+    WC2Idx = config['day_data_index']['wc1'] + 1
+    WC3Idx = config['day_data_index']['wc1'] + 2
+    WC4Idx = config['day_data_index']['wc1'] + 3
+
     # Initialization MIController
     mic = MIController() 
 
@@ -171,33 +60,36 @@ if __name__ == "__main__":
 
         dailyData = np.loadtxt( pathOUT, skiprows=4 )
         row = dailyData[ dailyDataPointer ]
-        wc1 = row[ WC1Idx ]
-        wc2 = row[ WC2Idx ]
+        wc3 = row[ WC3Idx ]
+        wc4 = row[ WC4Idx ]
         # print( 'wc1: {}, wc2: {} \n'.format( wc1, wc2 ))
 
         # Record State
-        mic.update( wc1, wc2, dailyDataPointer )
+        # mic.update( wc3, wc4, dailyDataPointer )
 
 
         # If moisture condition triggers irrigation event, controller to generate irrigation amount 
-        predictedIrri = mockControllerBySI( wc1 )
-        print( 'Irri: {}\n'.format( str(predictedIrri) ))
+        predictedIrri=helper.mockControllerBySI( wc3 )
+        tmpError = 25 - wc3
+        tmpIrr = 1.5 * tmpError
+        # print( 'error: {}, 1.5*error= {}\n'.format(tmpError, tmpIrr))
+        # print('Irri: {}\n\n'.format(str(predictedIrri)))
 
 
         if predictedIrri > 0:
             # Append Irrigatio Event into Example.Irr
             irriDay = dailyDataPointer + 1
-            appendDotIRR('Example.Irr', irriDay, predictedIrri )
+            helper.appendDotIRR('Example.Irr', irriDay, predictedIrri )
 
             # Re-simulation the whole procces ()
-            executeAquaCropPlugin()
+            helper.executeAquaCropPlugin()
 
         currentSimuDay = currentSimuDay + 1
         dailyDataPointer = dailyDataPointer + 1
-
-
-    stateRecord = mic.getStateRecord()
-    with open(r'../output/state_record.txt','w') as outFile:
-        for row in stateRecord:
-            outFile.write( 'state: {}, simuDay: {}\n'.format( row['state'], row['simuDay'] ) ) 
-    # Copy the daily and seasonal data to output
+    
+    # # Write out StateRecord
+    # stateRecord = mic.getStateRecord()
+    # statePath = r'../output/state_{}.txt'.format(name)
+    # with open(statePath, 'w') as outFile:
+    #     for row in stateRecord:
+    #         outFile.write( 'state: {}, simuDay: {}\n'.format( row['state'], row['simuDay'] ) ) 

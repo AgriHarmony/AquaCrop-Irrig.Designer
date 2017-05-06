@@ -1,0 +1,8 @@
+
+   5.0   : AquaCrop Version (October 2015)
+   5     : Drip irrigation
+  30     : Percentage of soil surface wetted by irrigation
+   1     : Irrigation schedule
+
+   Day    Depth (mm)   ECw (dS/m)
+====================================

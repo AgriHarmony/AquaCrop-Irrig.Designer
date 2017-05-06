@@ -1,5 +1,5 @@
 from Controller.MIController import MIController
-from Controller.settings import ConfigHolder 
+from settings import ConfigHolder 
 import numpy as np
 import random
 import unittest
@@ -21,10 +21,10 @@ class MIControllerTest( unittest.TestCase ):
         cfgHolder = ConfigHolder()
         config = cfgHolder.get()
         mic= MIController()
-        mic.setK( config['controllerK']['kp'], config['controllerK']['ki'], \
-                    config['controllerK']['kd'] )
+        mic.setK( config['controller_coefficient']['kp'], config['controller_coefficient']['ki'], \
+                    config['controller_coefficient']['kd'] )
         
-        mic.update(0.18, 0.35, 1)
+        mic.update(18, 35, 1)
         r = mic.getStateRecord()
         self.assertEqual(r[0]['state'], 'shallow: dry, deeper: wet')
     
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     # cfgHolder = ConfigHolder()
     # config = cfgHolder.get()
     # mic= MIController()
-    # mic.setK( config['controllerK']['kp'], config['controllerK']['ki'], \
-    #             config['controllerK']['kd'] )
+    # mic.setK( config['controller_coefficient']['kp'], config['controller_coefficient']['ki'], \
+    #             config['controller_coefficient']['kd'] )
     
     # simuPeriod = 100 # Day
     # simuDays = genSimuDaySeqList( simuPeriod )

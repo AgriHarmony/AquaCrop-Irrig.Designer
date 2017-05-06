@@ -1,3 +1,19 @@
+from settings import ConfigHolder
+from pathlib import Path
+import subprocess
+import os
+import shutil
+
+cfgHolder = ConfigHolder()
+config = cfgHolder.get()
+prefixLIST = config['path_prefix']['AC_plugin_LIST']
+prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
+prefixDATA = config['path_prefix']['AC_DATA']
+prefixDotPROBACK = config['path_prefix']['dotPRO']
+
+# Location
+pluginExeLocation =  config['executable_path']
+
 def isfloat(x):
     try:
         a = float(x)
@@ -14,26 +30,41 @@ def isint(x):
         return False
     else:
         return a == b
+def cleanExampleDotIrrFile():
+    fileName = 'Example.Irr'
+    sourceFilePath = Path( prefixDATA + fileName +'.BACK' ).resolve()
+    soruceFile = Path( sourceFilePath )
+    print( sourceFilePath )
+
+    # Generate target file path
+    parentDirPath = os.path.dirname ( sourceFilePath )
+    targetFilePath = parentDirPath + '/' + fileName 
+    targetFile = Path( targetFilePath )
+    print( targetFilePath )
+
+    shutil.copy2( sourceFilePath, targetFilePath )
+    # os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
 
 def copyDotPROFile(fileName):
     # find source file path
-    sourceFilePath = Path( prefix+fileName ).resolve()
+    sourceFilePath = Path( prefixLIST+fileName ).resolve()
     soruceFile = Path( sourceFilePath )
     
     # Generate target file path
-    parentDirPath = os.path.dirname ( sourceFilePath )
-    targetFilePath = parentDirPath + '/' + fileName + '.BACK'
+   
+    targetFilePath =   prefixDotPROBACK + fileName + '.BACK'
     targetFile = Path( targetFilePath )
 
     # check file source is exist and file target is not exist 
     if soruceFile.is_file() and not targetFile.is_file():
-        os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
+        shutil.copy2( sourceFilePath, targetFilePath )
+        # os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
 
 
 def readDotPROFile(fileName):
     configList = []
     lineCnt = 0
-    sourceFilePath = Path(prefix+fileName).resolve()
+    sourceFilePath = Path(prefixLIST+fileName).resolve()
     
     with open( sourceFilePath, 'r' ) as f:
         for line in f.readlines():
@@ -55,8 +86,8 @@ def readDotPROFile(fileName):
 def replaceDotPRObyLine(fileName, lineNum, contentStr):
     # lineNum is start with index = 0
 
-    sourceFilePath = Path(prefix+fileName).resolve()
-    print ( sourceFilePath )
+    sourceFilePath = Path(prefixLIST+fileName).resolve()
+
     f = open( sourceFilePath, 'r+' )
     
     lines = f.readlines()
@@ -69,11 +100,10 @@ def replaceDotPRObyLine(fileName, lineNum, contentStr):
     out = open( sourceFilePath, 'w' )
     out.writelines( lines )
     out.close()
+
 def appendDotIRR( fileName, day, irriAmount ):
     
-    sourceFilePath = Path( prefixIRR + fileName ).resolve()
-    print ( sourceFilePath )
-
+    sourceFilePath = Path( prefixDATA + fileName ).resolve()
     with open( sourceFilePath, 'a') as f:
         irriEventStr = '\n{:6d} {:9.1f} {:12.1f}'.format( day, irriAmount, 0)
         f.write( irriEventStr )

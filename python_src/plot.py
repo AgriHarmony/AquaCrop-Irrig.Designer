@@ -53,4 +53,5 @@ def plotWeather():
     print( 'hello plotWeather' )
 
 if __name__ == '__main__':
-    plotWaterContent()
+    plotWaterContent(62, 25)
+    plotWaterContent(63, 17)
