@@ -1,15 +1,16 @@
 # VirtualEnv
 MAC_ENV_PY3
 
-# python code output 
-output/
-
 # python library load cache
 *.pyc
 
 # bin input
-bin/aquacrop_plgu_in_v5_0/LIST
+bin/aquacrop_plgu_in_v5_0/LIST/*
 # bin output
-bin/aquacrop_plgu_in_v5_0/OUTP
+bin/aquacrop_plgu_in_v5_0/OUTP/
 
+# AquaCrop Experimental output
 *.OUT
+
+# .Irr file (written by main.py and read by aquacrop-plugin)
+bin/aquacrop_v5_0/DATA/Example.Irr
