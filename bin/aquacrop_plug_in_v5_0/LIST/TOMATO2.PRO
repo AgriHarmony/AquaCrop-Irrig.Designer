@@ -26,7 +26,7 @@
      28.0       : Default maximum temperature (�C) if no temperature file is specified
       3         : Default method for the calculation of growing degree days
 -- 1. Climate (CLI) file
-   Foggia.CLI
+   Foggia-NoRain.CLI
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
    1.1 Temperature (Tnx or TMP) file
    Foggia.TMP
@@ -35,7 +35,7 @@
    Foggia.ETO
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
    1.3 Rain (PLU) file
-   Foggia.PLU
+   Foggia-NoRain.PLU
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
    1.4 Atmospheric CO2 concentration (CO2) file
    MaunaLoa.CO2
