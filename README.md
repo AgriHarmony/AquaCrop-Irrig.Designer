@@ -23,6 +23,14 @@ If you need a lightweight developing environment for windows virtual mahcine, ch
 2. Run python main.py to conduct the Irrigation Method Design by AquaCrop Simulation 
 
 # Limitaion
+
+## AquaCrop
+
+- One direction water flow ( Only vertical )
+- Daily timestep simulation
+- No interactive API but execuatable
+
+## Irrig.Designer
 Due to the AquaCrop and AquaCrop-Plugin is close source program. User can not directly control the simulation process.
 The main.py program have to repeatly check __[.pro name]PROday.out__ file. If the condition of __[.pro name]PROday.out__ file triggers irrigation event on specific date, the AquaCrop must to re-execute the whole simulation. 
 
