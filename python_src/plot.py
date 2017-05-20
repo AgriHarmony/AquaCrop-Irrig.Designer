@@ -55,7 +55,10 @@ def plotError():
 def plotWeather():
     print( 'hello plotWeather' )
 
-def plotWClayer(dataSource):
+
+def plotCrop(dataSource):
+    pass
+def plotWClayer(dataSource, figureDest):
 
     
 
@@ -126,8 +129,6 @@ def plotWClayer(dataSource):
     WrEZZ_SAT_Data = np.transpose(dailyData[:,WrEZZ_SAT_Idx])
     WrEZZ_FC_Data = np.transpose(dailyData[:,WrEZZ_FC_Idx])
     WrEZZ_PWP_Data = np.transpose(dailyData[:,WrEZZ_PWP_Idx])
-    
-    print(WrEZZ_Data)
 
     axs[2].plot(dapData, WrEZZ_Data, 'b.', label='Wr')
     axs[2].plot(dapData, WrEZZ_SAT_Data,'g--', label='SAT_Wr')
@@ -135,7 +136,8 @@ def plotWClayer(dataSource):
     axs[2].plot(dapData, WrEZZ_PWP_Data,'r--', label='PWP_Wr')
     
     axs[2].legend(loc='upper left')
-    plt.show()
+    # plt.show()
+    plt.savefig(figureDest)
 
 if __name__ == '__main__':
     plotWaterContent(62, 25)

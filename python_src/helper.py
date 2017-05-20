@@ -137,9 +137,72 @@ def mockControllerBySI(wc_shallow, ref1=25):
     return irri
 
 # EWZ = Efficient Wetting Zone
-
+def ETbasedIrrigation(ET,k):
+    return ET*k
 
 def calEWZbyCompartment(compartmentBoundary, depth):
     closestIdx = min(range(len(compartmentBoundary)),
                      key=lambda i: abs(compartmentBoundary[i] - depth))
     return compartmentBoundary[closestIdx]
+
+def writeDayData2AlignedCSV(absSource, absDestination):
+    
+    # first line is meta-data, 
+    # Second line is blank 
+    # Third line is unti of column
+
+    dataCSV = []
+    with open(absSource, 'r') as fin:
+        
+        COLUMN_SKIP_LINE_NUM = config['day_data_format']['COLUMN_SKIP_LINE_NUM']
+        COLUMN_UNIT_LINE_NUM = config['day_data_format']['COLUMN_UNIT_LINE_NUM']
+        data = fin.readlines()
+        rowCount = 1
+        for line in data:
+            # if rowCount > 5:
+            #     break
+            
+            seg = [ ele for ele in line.split(' ') if ele != '' ]
+            
+            if rowCount == COLUMN_UNIT_LINE_NUM:
+                missingUnitList = config['day_data_format']['missingUnits']
+                seg = missingUnitList + seg 
+        
+            segCSV = ','.join(seg)
+            dataCSV.append(segCSV)
+            rowCount = rowCount + 1
+            
+    with open(absDestination, 'w') as fout:
+        for line in dataCSV:
+            fout.write(line)
+
+def writeSeasonData2AlignedCSV(absSource, absDestination):
+
+    # first line is meta-data, 
+    # Second line is blank 
+    # Third line is unti of column
+
+    dataCSV = []
+    with open(absSource, 'r') as fin:
+        
+        COLUMN_SKIP_LINE_NUM = config['day_data_format']['COLUMN_SKIP_LINE_NUM']
+        COLUMN_UNIT_LINE_NUM = config['day_data_format']['COLUMN_UNIT_LINE_NUM']
+        data = fin.readlines()
+        rowCount = 1
+        for line in data:
+            # if rowCount > 5:
+            #     break
+            
+            seg = [ ele for ele in line.split(' ') if ele != '' ]
+            
+            if rowCount == COLUMN_UNIT_LINE_NUM:
+                missingUnitList = config['season_data_format']['missingUnits']
+                seg = missingUnitList + seg 
+        
+            segCSV = ','.join(seg)
+            dataCSV.append(segCSV)
+            rowCount = rowCount + 1
+            
+    with open(absDestination, 'w') as fout:
+        for line in dataCSV:
+            fout.write(line)
