@@ -20,7 +20,8 @@ If you need a lightweight developing environment for windows virtual mahcine, ch
   - Climate data, Crop, Management
   - Select the Irrigation to specific Irrigation Scheduling
   
-2. Run python main.py to conduct the Irrigation Method Design by AquaCrop Simulation 
+2. Change directory to __cd python_src/__ 
+3. Run __python main.py__ to conduct the Irrigation Method Design by AquaCrop Simulation 
 
 # Limitaion
 
