@@ -1,66 +1,93 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from pathlib import Path
 from settings import ConfigHolder
+from os import listdir
+from os.path import isfile, join
+
 cfgHolder = ConfigHolder()
 config = cfgHolder.get()
 
 prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
 HEADER_NUM = config['day_data_format']['HEADER_ROW_NUM']
+prefixOutput = config['path_prefix']['output']
 
-def plotWaterContent( wcIndex = 62, ref = 25 ): 
+def plotWaterContent( depth, ref, simulationName, outputFigureName ): 
 
+    targetWCIndex = config['day_data_index']['wc1'] + depth
     #  default draw most shallow water content value of simulation result
-    Name = 'TOMATO2'
-    OUTExt = '.OUT'
-    dotOUTName = Name + 'PROday' + OUTExt
-    pathOUT = prefixOUTP + dotOUTName
-
+    fileType='day'
+    path = str(Path(prefixOutput + r'\ref_depth_matrix\data\{}_{}.csv'.format(simulationName, fileType) ).resolve())    
+    
     # load simulation result
-    dailyData = np.loadtxt( pathOUT, skiprows=HEADER_NUM )
-    dailyDataArray = np.array( dailyData )
-    
-    # Read row header of data
-    header = []
-    with open(pathOUT, 'r') as dotOut:        
-        i = 0
-        for line in dotOut:
-            if i >= HEADER_NUM:
-               break
-            elif i == 3 or i == 2:
-                header.append( [ item for item in line.split(' ')  if item != '' ] )
-           
-            i = i + 1
-    
+    # dailyData = np.loadtxt( path, skiprows=HEADER_NUM, delimiter="," )
+    # dailyDataArray = np.array( dailyData )
+    # print(dailyDataArray)
+    colsDefString="Day	Month	Year	DAP	Stage	WC(1.20)	Rain	Irri	Surf	Infilt	RO	Drain	CR	Zgwt	Ex	E	E/Ex	Trx	Tr	Tr/Trx	ETx	ET	ET/ETx	GD	Z	StExp	StSto	StSen	StSalt	CC	Kc(Tr)	Trx	Tr	Tr/Trx	WP	StBio	Biomass	HI	Yield	Brelative	WPet	WC(1.20)	Wr(1.00)	Z	Wr	Wr(SAT)	Wr(FC)	Wr(exp)	Wr(sto)	Wr(sen)	Wr(PWP)	SaltIn	SaltOut	SaltUp	Salt(1.20)	SaltZ	Z	ECe	ECsw	StSalt	Zgwt	ECgw	WC1	WC2	WC3	WC4	WC5	WC6	WC7	WC8	WC9	WC10	WC11	WC12	ECe1	ECe2	ECe3	ECe4	ECe5	ECe6	ECe7	ECe8	ECe9	ECe10	ECe11	ECe12	Rain	ETo	Tmin	Tavg	Tmax	CO2"
+    colsDefTuple = tuple(colsDefString.split('\t'))
+    dailyData = np.genfromtxt(path, delimiter=',',skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
+    targetWC = colsDefTuple[targetWCIndex]
     ## Plot Data
-    # wc1
-    simuDayIdx = 3
-    x = dailyDataArray[:, simuDayIdx]
-    y = dailyDataArray[:, wcIndex]
+    # WC at depth
+   
+    x = dailyData['DAP']
+    y = dailyData[targetWC]
 
-    # ref1 
+    # ref
     x2 = x
     y2 = [ref] * len(x2)
     
     # plot diagram
-    plt.plot( x, y, 'r-', x2, y2, 'g-')
-    headerMetricIndex = wcIndex - 5
-    plt.ylabel('water content,{} ( depth: {} m )'.format( header[0][wcIndex], header[1][headerMetricIndex] ))
+    plt.plot( x, y, 'r-')
+    plt.plot( x2, y2, 'g-')
+ 
+    plt.ylabel('water content at  '.format( targetWC ))
     plt.xlabel('day')
-    plt.show()
+    # plt.show()
+    pathFigureOut = str(Path(prefixOutput + r'{}_{}.png'.format(outputFigureName, fileType) ).resolve())
+    plt.savefig(pathFigureOut)
+    plt.clf()
 
+def plotAllWaterContent( depthList, ref, simulationName, outputFigureName ): 
 
-def plotError():
-    print( 'hello plotError' )
-
-def plotWeather():
-    print( 'hello plotWeather' )
-
-
-def plotCrop(dataSource):
-    pass
-def plotWClayer(dataSource, figureDest):
-
+ 
+    # synthesis data path
+    fileType='day'
+    # path = str(Path(prefixOutput + r'\ref_depth_matrix\data\{}_{}.csv'.format(simulationName, fileType) ).resolve())    
+    path = str(Path(prefixOutput + r'\{}_{}.csv'.format(simulationName, fileType) ).resolve())   
+    # load all data
+    colsDefString="Day	Month	Year	DAP	Stage	WC(1.20)	Rain	Irri	Surf	Infilt	RO	Drain	CR	Zgwt	Ex	E	E/Ex	Trx	Tr	Tr/Trx	ETx	ET	ET/ETx	GD	Z	StExp	StSto	StSen	StSalt	CC	Kc(Tr)	Trx	Tr	Tr/Trx	WP	StBio	Biomass	HI	Yield	Brelative	WPet	WC(1.20)	Wr(1.00)	Z	Wr	Wr(SAT)	Wr(FC)	Wr(exp)	Wr(sto)	Wr(sen)	Wr(PWP)	SaltIn	SaltOut	SaltUp	Salt(1.20)	SaltZ	Z	ECe	ECsw	StSalt	Zgwt	ECgw	WC1	WC2	WC3	WC4	WC5	WC6	WC7	WC8	WC9	WC10	WC11	WC12	ECe1	ECe2	ECe3	ECe4	ECe5	ECe6	ECe7	ECe8	ECe9	ECe10	ECe11	ECe12	Rain	ETo	Tmin	Tavg	Tmax	CO2"
+    colsDefTuple = tuple(colsDefString.split('\t'))
+    dailyData = np.genfromtxt(path, delimiter=',',skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
     
+    ## Plot Data
+    # WC at depth
+    for d in depthList:
+        targetWCIndex = config['day_data_index']['wc1'] + d
+        targetWCName = colsDefTuple[targetWCIndex]
+        x = dailyData['DAP']
+        y = dailyData[targetWCName]
+        plt.plot( x, y, linestyle='--',label=targetWCName)
+
+    # ref
+    x2 = x
+    y2 = [ref] * len(x2)
+    plt.plot( x2, y2, 'g-')
+    # plot diagram
+ 
+
+    plt.legend( loc=2 )
+    plt.ylabel('all water content')
+    plt.xlabel('day')
+    # plt.show()
+    pathFigureOut = str(Path(prefixOutput + r'{}_{}.png'.format(outputFigureName, fileType) ).resolve())
+    plt.savefig(pathFigureOut)
+    plt.clf()
+
+
+
+def plotWClayer(dataSource, figureDest):
 
     dailyData = np.loadtxt(dataSource, delimiter=',', skiprows=HEADER_NUM)
     
@@ -139,6 +166,39 @@ def plotWClayer(dataSource, figureDest):
     # plt.show()
     plt.savefig(figureDest)
 
-if __name__ == '__main__':
-    plotWaterContent(62, 25)
-    plotWaterContent(63, 17)
+
+def plot_img_test():
+    
+    # extract csv files in directory
+    outputPath = Path(prefixOutput).resolve()
+    fileNames = [f for f in listdir(outputPath) if isfile(join(outputPath, f))]
+    csvFileNames = [f for f in fileNames if f.split(".")[1] == 'csv']
+    print(csvFileNames)
+
+    for csvFileName in csvFileNames:
+        
+        # extract WC datas and transpose
+        path = str(Path(prefixOutput + csvFileName).resolve())   
+        # load all data
+        colsDefString="Day	Month	Year	DAP	Stage	WC(1.20)	Rain	Irri	Surf	Infilt	RO	Drain	CR	Zgwt	Ex	E	E/Ex	Trx	Tr	Tr/Trx	ETx	ET	ET/ETx	GD	Z	StExp	StSto	StSen	StSalt	CC	Kc(Tr)	Trx	Tr	Tr/Trx	WP	StBio	Biomass	HI	Yield	Brelative	WPet	WC(1.20)	Wr(1.00)	Z	Wr	Wr(SAT)	Wr(FC)	Wr(exp)	Wr(sto)	Wr(sen)	Wr(PWP)	SaltIn	SaltOut	SaltUp	Salt(1.20)	SaltZ	Z	ECe	ECsw	StSalt	Zgwt	ECgw	WC1	WC2	WC3	WC4	WC5	WC6	WC7	WC8	WC9	WC10	WC11	WC12	ECe1	ECe2	ECe3	ECe4	ECe5	ECe6	ECe7	ECe8	ECe9	ECe10	ECe11	ECe12	Rain	ETo	Tmin	Tavg	Tmax	CO2"
+        colsDefTuple = tuple(colsDefString.split('\t'))
+        dailyData = np.genfromtxt(path, delimiter=',',skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
+        WCs = dailyData[['WC1','WC2','WC3','WC4','WC5','WC6','WC7','WC8','WC9','WC10']]
+        zoot = dailyData['Z']
+        reversedZoot = -1*zoot
+
+
+        # print(WCs)
+        test = np.transpose( [ list(r) for r in WCs] )
+
+        fig, ax = plt.subplots()
+        data = test
+        cax = ax.imshow(data, interpolation='none', cmap="Spectral", extent=[0,130,-1,0], aspect="auto")
+        ax.plot(reversedZoot)        
+        cbar = fig.colorbar(cax, orientation='horizontal')
+        ax.set_xlabel('Time(day)')
+        ax.set_ylabel('Soil Depth(m)')
+        ax.set_title('Variation of Soil Water')
+        pathFigureOut = str(Path(prefixOutput + r'{}_All_WC_root.png'.format(csvFileName.split('.')[0]) ).resolve())
+        plt.savefig(pathFigureOut)
+        plt.clf()
