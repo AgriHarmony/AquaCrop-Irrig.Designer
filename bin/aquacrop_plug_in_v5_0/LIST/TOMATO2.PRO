@@ -56,7 +56,7 @@
    (None)
    (None)
 -- 7. Initial conditions (SW0) file
-   WetDry.SW0
+   WPSandLoam.SW0
    D:\yk_research\AquaCrop-Irrigation-Design\bin\aquacrop_v5_0\DATA\
 -- 8. Off-season conditions (OFF) file
    (None)

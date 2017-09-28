@@ -9,6 +9,7 @@ class ConfigHolder():
             "path_help": "all the path prefix is relative to python_src directory",
             
             "path_prefix": {
+                "root": r'D:\yk_research\AquaCrop-Irrigation-Design',
                 "input": r'../input/',
                 "output": r'../output/',
                 "dotPRO": r'../dotPROfiles/',
@@ -26,7 +27,7 @@ class ConfigHolder():
                 "zoot": 24,
                 "WCtotal": 41,  # check Aquacrop plugin user manual p13 columns 44~53 
                 "wc1": 62,
-                "wc2": 63,
+                "wc8": 69,
             },
             "day_data_format": {
                 "COLUMN_INFO_LINE_NUM": 1,

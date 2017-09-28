@@ -1,6 +1,6 @@
 Default Potato, GDD (Lima, 17May95)
-     4.0       : AquaCrop Version (June 2012)
-     0         : File protected
+     5.0       : AquaCrop Version (October 2015)
+     1         : File not protected
      3         : root/tuber crop
      0         : Crop is transplanted
      0         : Determination of crop cycle : by growing degree-days
@@ -30,7 +30,7 @@ Default Potato, GDD (Lima, 17May95)
      2         : Electrical Conductivity of soil saturation extract at which crop starts to be affected by soil salinity (dS/m)
     10         : Electrical Conductivity of soil saturation extract at which crop can no longer grow (dS/m)
      0         : Shape factor for soil salinity stress coefficient (0 : linear response)
-     1.10      : Crop coefficient when canopy is complete but prior to senescence (Kcb,x)
+     1.10      : Crop coefficient when canopy is complete but prior to senescence (KcTr,x)
      0.150     : Decline of crop coefficient (%/day) as a result of ageing, nitrogen deficiency, etc.
      0.30      : Minimum effective rooting depth (m)
      1.50      : Maximum effective rooting depth (m)
@@ -39,22 +39,23 @@ Default Potato, GDD (Lima, 17May95)
      0.004     : Maximum root water extraction (m3water/m3soil.day) in bottom quarter of root zone
     60         : Effect of canopy cover in reducing soil evaporation in late season stage
     15.00      : Soil surface covered by an individual seedling at 90 % emergence (cm2)
+    15.00      : Canopy size of individual plant (re-growth) at 1st day (cm2)
     40000      : Number of plants per hectare
-     0.26994   : Canopy growth coefficient (CGC): Increase in canopy cover (fraction soil cover per day)
+     0.27662   : Canopy growth coefficient (CGC): Increase in canopy cover (fraction soil cover per day)
     -9         : Maximum decrease of Canopy Growth Coefficient in and between seasons - Not Applicable
     -9         : Number of seasons at which maximum decrease of Canopy Growth Coefficient is reached - Not Applicable
     -9.0       : Shape factor for decrease Canopy Growth Coefficient - Not Applicable
      0.92      : Maximum canopy cover (CCx) in fraction soil cover
-     0.02781   : Canopy decline coefficient (CDC): Decrease in canopy cover (in fraction per day)
-    11         : Calendar Days: from transplanting to recovered transplant
-    66         : Calendar Days: from transplanting to maximum rooting depth
-    59         : Calendar Days: from transplanting to start senescence
-    80         : Calendar Days: from transplanting to maturity
+     0.03435   : Canopy decline coefficient (CDC): Decrease in canopy cover (in fraction per day)
+    12         : Calendar Days: from transplanting to recovered transplant
+    63         : Calendar Days: from transplanting to maximum rooting depth
+    58         : Calendar Days: from transplanting to start senescence
+    75         : Calendar Days: from transplanting to maturity
     32         : Calendar Days: from transplanting to start of yield formation
      0         : Length of the flowering stage (days)
      0         : Crop determinancy unlinked with flowering
     -9         : Excess of potential fruits - Not Applicable
-    47         : Building up of Harvest Index starting at root/tuber enlargement (days)
+    41         : Building up of Harvest Index starting at root/tuber enlargement (days)
     18.0       : Water Productivity normalized for ETo and CO2 (WP*) (gram/m2)
    100         : Water Productivity normalized for ETo and CO2 during yield formation (as % WP*)
     50         : Crop performance under elevated atmospheric CO2 concentration (%)
