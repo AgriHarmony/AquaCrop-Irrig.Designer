@@ -1,8 +1,10 @@
-from settings import ConfigHolder
+from Configuration import ConfigHolder
 from pathlib import Path
+import json
 import subprocess
 import os
 import shutil
+import numpy as np
 
 cfgHolder = ConfigHolder()
 config = cfgHolder.get()
@@ -10,9 +12,6 @@ prefixLIST = config['path_prefix']['AC_plugin_LIST']
 prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
 prefixDATA = config['path_prefix']['AC_DATA']
 prefixDotPROBACK = config['path_prefix']['dotPRO']
-
-# Location
-pluginExeLocation = config['executable_path']
 
 
 def isfloat(x):
@@ -34,39 +33,24 @@ def isint(x):
         return a == b
 
 
-def cleanExampleDotIrrFile():
-    fileName = 'Example.Irr'
-    sourceFilePath = Path(prefixDATA + fileName + '.BACK').resolve()
-    soruceFile = Path(sourceFilePath)
-    print(sourceFilePath)
-
-    # Generate target file path
-    parentDirPath = os.path.dirname(sourceFilePath)
-    targetFilePath = parentDirPath + '/' + fileName
-    targetFile = Path(targetFilePath)
-    print(targetFilePath)
-
-    shutil.copy2(sourceFilePath, targetFilePath)
-    # os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
 
 
 def copyDotPROFile(fileName):
+
     # find source file path
     sourceFilePath = Path(prefixLIST + fileName).resolve()
     soruceFile = Path(sourceFilePath)
 
     # Generate target file path
-
     targetFilePath = prefixDotPROBACK + fileName + '.BACK'
     targetFile = Path(targetFilePath)
 
     # check file source is exist and file target is not exist
     if soruceFile.is_file() and not targetFile.is_file():
         shutil.copy2(sourceFilePath, targetFilePath)
-        # os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
-
 
 def readDotPROFile(fileName):
+
     configList = []
     lineCnt = 0
     sourceFilePath = Path(prefixLIST + fileName).resolve()
@@ -115,8 +99,7 @@ def appendDotIRR(fileName, day, irriAmount):
         f.write(irriEventStr)
 
 
-def executeAquaCropPlugin():
-     subprocess.call([pluginExeLocation])
+
 
 
 def mockControllerBySI(wc_shallow, ref1=25):
@@ -137,54 +120,59 @@ def mockControllerBySI(wc_shallow, ref1=25):
     return irri
 
 # EWZ = Efficient Wetting Zone
-def ETbasedIrrigation(ET,k):
-    return ET*k
+
+
+def ETbasedIrrigation(ET, k):
+    return ET * k
+
 
 def calEWZbyCompartment(compartmentBoundary, depth):
     closestIdx = min(range(len(compartmentBoundary)),
                      key=lambda i: abs(compartmentBoundary[i] - depth))
     return compartmentBoundary[closestIdx]
 
-def writeDayData2AlignedCSV(absSource, absDestination):
-    
-    # first line is meta-data, 
-    # Second line is blank 
-    # Third line is unti of column
 
+def writeDayData2AlignedCSV(absSource, absDestination):
+
+    # first line is meta-data,
+    # Second line is blank
+    # Third line is unit of column
     dataCSV = []
     with open(absSource, 'r') as fin:
-        
+
         COLUMN_SKIP_LINE_NUM = config['day_data_format']['COLUMN_SKIP_LINE_NUM']
         COLUMN_UNIT_LINE_NUM = config['day_data_format']['COLUMN_UNIT_LINE_NUM']
         data = fin.readlines()
         rowCount = 1
         for line in data:
+
             # if rowCount > 5:
             #     break
-            
-            seg = [ ele for ele in line.split(' ') if ele != '' ]
-            
+
+            seg = [ele for ele in line.split(' ') if ele != '']
+
             if rowCount == COLUMN_UNIT_LINE_NUM:
                 missingUnitList = config['day_data_format']['missingUnits']
-                seg = missingUnitList + seg 
-        
+                seg = missingUnitList + seg
+
             segCSV = ','.join(seg)
             dataCSV.append(segCSV)
             rowCount = rowCount + 1
-            
+
     with open(absDestination, 'w') as fout:
         for line in dataCSV:
             fout.write(line)
+
 
 def writeSeasonData2AlignedCSV(absSource, absDestination):
 
-    # first line is meta-data, 
-    # Second line is blank 
+    # first line is meta-data,
+    # Second line is blank
     # Third line is unti of column
 
     dataCSV = []
     with open(absSource, 'r') as fin:
-        
+
         COLUMN_SKIP_LINE_NUM = config['day_data_format']['COLUMN_SKIP_LINE_NUM']
         COLUMN_UNIT_LINE_NUM = config['day_data_format']['COLUMN_UNIT_LINE_NUM']
         data = fin.readlines()
@@ -192,17 +180,107 @@ def writeSeasonData2AlignedCSV(absSource, absDestination):
         for line in data:
             # if rowCount > 5:
             #     break
-            
-            seg = [ ele for ele in line.split(' ') if ele != '' ]
-            
+
+            seg = [ele for ele in line.split(' ') if ele != '']
+
             if rowCount == COLUMN_UNIT_LINE_NUM:
                 missingUnitList = config['season_data_format']['missingUnits']
-                seg = missingUnitList + seg 
-        
+                seg = missingUnitList + seg
+
             segCSV = ','.join(seg)
             dataCSV.append(segCSV)
             rowCount = rowCount + 1
-            
+
     with open(absDestination, 'w') as fout:
         for line in dataCSV:
             fout.write(line)
+
+
+def generateDotOUTName(name):
+    OUTExt = '.OUT'
+    dotOUTName = name + 'PROday' + OUTExt
+    return dotOUTName
+
+
+def generateDotPROName(name):
+
+    PROExt = '.PRO'
+    dotPROName = name + PROExt
+    return dotPROName
+
+
+def extractYieldandTotalIrri(simulationName):
+    prefixOutput = config['path_prefix']['output']
+    HEADER_NUM = config['day_data_format']['HEADER_ROW_NUM']
+    seasonIrriIndex = 8
+    seasonYield = 30
+    fileType = 'season'
+    path = str(
+        Path(prefixOutput + r'{}_{}.csv'.format(simulationName, fileType)).resolve())
+
+    # load simulation result
+    # dailyData = np.loadtxt( path, skiprows=HEADER_NUM, delimiter="," )
+    # dailyDataArray = np.array( dailyData )
+    # print(dailyDataArray)
+    colsDefString = "Period	Day1	Month1	Year1	Rain	ETo	GD	CO2	Irri	Infilt	Runoff	Drain	Upflow	E	E/Ex	Tr	Tr/Trx	SaltIn	SaltOut	SaltUp	SaltProf	Cycle	SaltStr	FertStr	TempStr	ExpStr	StoStr	BioMass	Brelative	HI	Yield	WPet	DayN	MonthN	YearN	File"
+    colsDefTuple = tuple(colsDefString.split('\t'))
+    dailyData = np.genfromtxt(
+        path, delimiter=',', skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
+
+    seasonIrri = dailyData[colsDefTuple[seasonIrriIndex]][-1]
+    seasonYield = dailyData[colsDefTuple[seasonYield]][-1]
+    return {'seasonIrri': seasonIrri, 'seasonYield': seasonYield}
+
+
+def writeResultList(resultList):
+    prefixOutput = config['path_prefix']['output']
+    path = str(Path(prefixOutput + r'result.csv').resolve())
+    with open(path, 'a') as f:
+        for result in resultList:
+            line = '{:d},{:d},{:f},{:f}\n'.format(
+                result['depth'], result['ref'], result['seasonYield'], result['seasonIrri'])
+            f.write(line)
+
+
+def writeMovingResultList(resultList):
+    
+    prefixOutput = config['path_prefix']['output']
+    path = str(Path(prefixOutput + r'result.csv').resolve())
+    with open(path, 'a') as f:
+        for result in resultList:
+            line = '{:f},{:d},{:f},{:f}\n'.format(
+                result['mp'], result['ref'], result['seasonYield'], result['seasonIrri'])
+            f.write(line)
+
+
+def readSharedInfo(path):
+    sharedInfo = {}
+    with open(path, "r") as data:
+        sharedInfo = json.load(data)
+
+    return sharedInfo
+
+
+def increaseIdSharedInfo(path):
+
+    sharedInfo = {}
+    with open(path, "r") as data:
+        sharedInfo = json.load(data)
+
+    with open(path, "r+", encoding='utf-8') as data:
+        sharedInfo["current_unique_id"] = sharedInfo["current_unique_id"] + 1
+        json.dump(sharedInfo, data, indent=4)
+
+
+def writeAlgorithmStatus(statusList):
+    prefixOutput = config['path_prefix']['output']
+    path = str(Path(prefixOutput + r'result.csv').resolve())
+    with open(path, 'a') as f:
+        for result in resultList:
+            line = '{:d},{:d},{:f},{:f}\n'.format(
+                result['depth'], result['ref'], result['seasonYield'], result['seasonIrri'])
+            f.write(line)
+# def createExpJSON(srcPath, destPath):
+#     sharedInfo = readSharedInfo(srcPath)
+#     with open(destPath, "r+") as outfile:
+#         json.dump(sharedInfo["info_format"], data, indent=4).encode("uff_8")
