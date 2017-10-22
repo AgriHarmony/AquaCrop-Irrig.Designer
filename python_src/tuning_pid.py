@@ -4,7 +4,7 @@ import datetime
 import plot_main as pm
 from Controller.MIController import MIController
 from Controller.MIController import SimpleController
-from settings import ConfigHolder
+from Configuration import ConfigHolder
 from Simulator.EnvSimulator import EnvSimulator
 
 def simulateOnce(t,d):
