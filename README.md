@@ -1,4 +1,4 @@
-# AquaCrop-Irrigation-Design
+# AquaCrop-Irrigation-Designer
 a simulation tool base on python code executing aquacrop-plugin exeutable
 
 # Environment
