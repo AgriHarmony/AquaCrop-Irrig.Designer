@@ -2,8 +2,8 @@ import numpy as np
 import helper as helper
 import datetime
 import plot as myplot
-from Controller.MIController import MIController
-from Controller.MIController import SimpleController
+from Controller.Controller import Controller
+from Controller.Controller import SimpleController
 from Configuration import ConfigHolder
 from Simulator.EnvSimulator import EnvSimulator
 
@@ -18,18 +18,18 @@ def simulateOnce(ref, depth, simulationName):
     # controller intialization
     #
     soilProperityDict = {"sat": 50, "fc": 30, "pwp": 10}
-    soilProfile = {"compartmentNum": 7}
+    soilProfile = {"compartment_num": 7}
     sensorIntepret = {"controlDepth": depth}
     simpleCtl = SimpleController(
         soilProperityDict, soilProfile, sensorIntepret)
 
     # Set refs
-    refsArray = np.zeros(soilProfile['compartmentNum'])
+    refsArray = np.zeros(soilProfile['compartment_num'])
     refsArray[depth] = ref
     simpleCtl.set_ref(refsArray)
 
     # Set Kp,Ki,Kd cefficient
-    kArray = np.zeros((3, soilProfile['compartmentNum']))
+    kArray = np.zeros((3, soilProfile['compartment_num']))
     kArrayIndex = simpleCtl.get_kArray_index()
 
     ku = 4
@@ -87,16 +87,13 @@ def simulateOnce(ref, depth, simulationName):
         # print(err)
         predictedIrri = simpleCtl.get_output(WCsnpArray)
 
-
-
-
         """
             Find floating EWC( Efficient Wetting Zone )
         """
         # firstQuarter = rDepth * 0.5
-        # compartmentBoundary = config['compartmentBoundary']
+        # compartment_boundary_list = config['compartment_boundary_list']
         # closestCompartment = helper.calEWZbyCompartment(
-        #     compartmentBoundary, firstQuarter)
+        #     compartment_boundary_list, firstQuarter)
 
         # EWZGrowIdx = int(closestCompartment * 10 - 1)
         # EWZBottomWaterContent = row[WC1Idx + EWZGrowIdx]

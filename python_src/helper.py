@@ -6,12 +6,14 @@ import os
 import shutil
 import numpy as np
 
-cfgHolder = ConfigHolder()
-config = cfgHolder.get()
+configHolder = ConfigHolder()
+config = configHolder.get()
 prefixLIST = config['path_prefix']['AC_plugin_LIST']
 prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
 prefixDATA = config['path_prefix']['AC_DATA']
 prefixDotPROBACK = config['path_prefix']['dotPRO']
+
+HEADER_NUM = config['day_data_format']['HEADER_ROW_NUM']
 
 
 def isfloat(x):
@@ -33,8 +35,6 @@ def isint(x):
         return a == b
 
 
-
-
 def copyDotPROFile(fileName):
 
     # find source file path
@@ -48,6 +48,7 @@ def copyDotPROFile(fileName):
     # check file source is exist and file target is not exist
     if soruceFile.is_file() and not targetFile.is_file():
         shutil.copy2(sourceFilePath, targetFilePath)
+
 
 def readDotPROFile(fileName):
 
@@ -99,9 +100,6 @@ def appendDotIRR(fileName, day, irriAmount):
         f.write(irriEventStr)
 
 
-
-
-
 def mockControllerBySI(wc_shallow, ref1=25):
 
     kp = 1.5
@@ -126,10 +124,10 @@ def ETbasedIrrigation(ET, k):
     return ET * k
 
 
-def calEWZbyCompartment(compartmentBoundary, depth):
-    closestIdx = min(range(len(compartmentBoundary)),
-                     key=lambda i: abs(compartmentBoundary[i] - depth))
-    return compartmentBoundary[closestIdx]
+def calEWZbyCompartment(compartment_boundary_list, depth):
+    closestIdx = min(range(len(compartment_boundary_list)),
+                     key=lambda i: abs(compartment_boundary_list[i] - depth))
+    return compartment_boundary_list[closestIdx]
 
 
 def writeDayData2AlignedCSV(absSource, absDestination):
@@ -243,7 +241,7 @@ def writeResultList(resultList):
 
 
 def writeMovingResultList(resultList):
-    
+
     prefixOutput = config['path_prefix']['output']
     path = str(Path(prefixOutput + r'result.csv').resolve())
     with open(path, 'a') as f:
@@ -271,16 +269,25 @@ def increaseIdSharedInfo(path):
         sharedInfo["current_unique_id"] = sharedInfo["current_unique_id"] + 1
         json.dump(sharedInfo, data, indent=4)
 
+    # def createExpJSON(srcPath, destPath):
+    #     sharedInfo = readSharedInfo(srcPath)
+    #     with open(destPath, "r+") as outfile:
+    # json.dump(sharedInfo["info_format"], data, indent=4).encode("uff_8")
 
-def writeAlgorithmStatus(statusList):
-    prefixOutput = config['path_prefix']['output']
-    path = str(Path(prefixOutput + r'result.csv').resolve())
-    with open(path, 'a') as f:
-        for result in resultList:
-            line = '{:d},{:d},{:f},{:f}\n'.format(
-                result['depth'], result['ref'], result['seasonYield'], result['seasonIrri'])
-            f.write(line)
-# def createExpJSON(srcPath, destPath):
-#     sharedInfo = readSharedInfo(srcPath)
-#     with open(destPath, "r+") as outfile:
-#         json.dump(sharedInfo["info_format"], data, indent=4).encode("uff_8")
+
+def loadDayCSV(csvSourceFile):
+
+    colsDefTuple = configHolder.getCSVDayDataColumnTuple()
+    dailyData = np.genfromtxt(
+        csvSourceFile, delimiter=',', skip_header=HEADER_NUM,
+        dtype=float, names=colsDefTuple)
+    return dailyData
+
+
+# Not test yet
+def loadSeasonCSV(csvSourceFile):
+    colsDefTuple = configHolder.getCSVSeasonDataColumnTuple()
+    seasonalData = np.genfromtxt(
+        csvSourceFile, delimiter=',', skip_header=HEADER_NUM,
+        dtype=float, names=colsDefTuple)
+    return seasonalData

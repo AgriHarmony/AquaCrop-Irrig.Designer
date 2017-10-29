@@ -72,9 +72,7 @@ class EnvSimulator():
         # os.system( 'cp {} {}'.format(sourceFilePath, targetFilePath) )
 
     def initRun(self):
-        """
-            Do First Simulation to generate whole moisture(VWC) variation, this should be refactoring
-        """
+
         self.cleanExampleDotIrrFile()
         self.executeAquaCropPlugin()
         self.loadResult()
@@ -102,6 +100,8 @@ class EnvSimulator():
     def getAllDailyData(self):
         return self.dailyData
 
+    # Wait for refactoring by the plot_WC_layers in plot.py example
+    # Keywords: genfromtxt
     def loadResult(self):
         prefixOUTP = config['path_prefix']['AC_plugin_OUTP']
         pathOUT = prefixOUTP + self.dotOUTName

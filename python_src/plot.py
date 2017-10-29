@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from pathlib import Path
 from Configuration import ConfigHolder
+from Algorithm.AlgorithmLog import AlgorithmLog
 from os import listdir
 from os.path import isfile, join, basename
 
@@ -58,7 +59,9 @@ def plotAllWaterContent(depthList, ref, simulationName, outputFigureName):
 
     # synthesis data path
     fileType = 'day'
-    # path = str(Path(prefixOutput + r'\ref_depth_matrix\data\{}_{}.csv'.format(simulationName, fileType) ).resolve())
+    # path = str(Path(prefixOutput +
+    # r'\ref_depth_matrix\data\{}_{}.csv'.format(simulationName, fileType)
+    # ).resolve())
     path = str(
         Path(prefixOutput + r'\{}_{}.csv'.format(simulationName, fileType)).resolve())
     # load all data
@@ -98,7 +101,8 @@ def plotWClayer(dataSource, figureDest):
 
     # subplot preparation
     fig, axs = plt.subplots(3, 1,  figsize=(6, 9))
-    # fig.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
+    # fig.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94,
+    # wspace=0.05)
 
     ##
     # plot WC layer content
@@ -171,119 +175,73 @@ def plotWClayer(dataSource, figureDest):
     plt.savefig(figureDest)
 
 
-def plot_img_test(sensor0TrackList=[], sensor1TrackList=[]):
+def plot_WC_layers(dayDataPath, logDataPath):
 
-    # extract csv files in directory
-    outputPath = Path(prefixOutput).resolve()
-    fileNames = [f for f in listdir(outputPath) if isfile(join(outputPath, f))]
-    csvFileNames = [f for f in fileNames if f.split(
-        ".")[1] == 'csv' and "day" in f.split(".")[0]]
-    print(csvFileNames)
-
-    for csvFileName in csvFileNames:
-
-        # retrieve ref, sensor0 depth and sensor1 depth
-        sensor0Depth = int(csvFileName.split("_")[0][5]) * 10 + 5
-        sensor0DepthStr = str(sensor0Depth)
-        revSensor0Depth = -1 * sensor0Depth
-        refStr = csvFileName.split("_")[1][3:]
-
-        # extract WC datas and transpose
-        path = str(Path(prefixOutput + csvFileName).resolve())
-
-        # load all data
-        colsDefString = "Day	Month	Year	DAP	Stage	WC(1.20)	Rain	Irri	Surf	Infilt	RO	Drain	CR	Zgwt	Ex	E	E/Ex	Trx	Tr	Tr/Trx	ETx	ET	ET/ETx	GD	Z	StExp	StSto	StSen	StSalt	CC	Kc(Tr)	Trx	Tr	Tr/Trx	WP	StBio	Biomass	HI	Yield	Brelative	WPet	WC(1.20)	Wr(1.00)	Z	Wr	Wr(SAT)	Wr(FC)	Wr(exp)	Wr(sto)	Wr(sen)	Wr(PWP)	SaltIn	SaltOut	SaltUp	Salt(1.20)	SaltZ	Z	ECe	ECsw	StSalt	Zgwt	ECgw	WC1	WC2	WC3	WC4	WC5	WC6	WC7	WC8	WC9	WC10	WC11	WC12	ECe1	ECe2	ECe3	ECe4	ECe5	ECe6	ECe7	ECe8	ECe9	ECe10	ECe11	ECe12	Rain	ETo	Tmin	Tavg	Tmax	CO2"
-        colsDefTuple = tuple(colsDefString.split('\t'))
-        dailyData = np.genfromtxt(
-            path, delimiter=',', skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
-        WCs = dailyData[['WC1', 'WC2', 'WC3', 'WC4',
-                         'WC5', 'WC6', 'WC7', 'WC8', 'WC9', 'WC10']]
-        root = dailyData['Z']
-
-        # print(WCs)
-        test = np.transpose([list(r) for r in WCs])
-
-        fig, ax = plt.subplots()
-        data = test
-        cax = ax.imshow(data, interpolation='none', cmap="Spectral", extent=[
-                        0, len(root), -1, 0], aspect="auto")
-        reversedRoot = -1 * root
-        ax.plot(reversedRoot)
-
-        # sensor0 track
-        # if not sensor0TrackList:
-        #     # fixed sensor0 track
-        #     revSensor0DepthSeries = np.ones(len(root))*0.01*revSensor0Depth
-        #     ax.plot(revSensor0DepthSeries,color="red")
-        if sensor0TrackList:
-            # print(sensor0TrackList)
-            revSensor0TrackList = -1 * \
-                (np.array(sensor0TrackList) * 10 + 5) * 0.01
-            ax.plot(revSensor0TrackList, color="red")
-
-        # sensor1 track
-
-        if sensor1TrackList:
-            revSensor1TrackList = -1 * \
-                (np.array(sensor1TrackList) * 10 + 5) * 0.01
-            ax.plot(revSensor1TrackList, color="green")
-
-        cbar = fig.colorbar(cax, orientation='horizontal')
-        ax.set_xlabel('Time(day)')
-        ax.set_ylabel('Soil Depth(m)')
-        ax.set_title("sensor0 start at {}cm and ref={}".format(
-            sensor0DepthStr, refStr))
-        pathFigureOut = str(Path(
-            prefixOutput + r'{}_All_WC_root.png'.format(csvFileName.split('.')[0])).resolve())
-        plt.savefig(pathFigureOut)
-        plt.clf()
-
-
-def plot_WC_layers(csvSourceFile):
-    
-    
-    # load all data
+    # load day data
     colsDefTuple = configHolder.getCSVDayDataColumnTuple()
     dailyData = np.genfromtxt(
-        csvSourceFile, delimiter=',', skip_header=HEADER_NUM, dtype=float, names=colsDefTuple)
+        dayDataPath, delimiter=',', skip_header=HEADER_NUM,
+        dtype=float, names=colsDefTuple)
+
     WCs = dailyData[['WC1', 'WC2', 'WC3', 'WC4',
                      'WC5', 'WC6', 'WC7', 'WC8', 'WC9', 'WC10']]
     root = dailyData['Z']
-
-    # print(WCs)
     data = np.transpose([list(r) for r in WCs])
+
     fig, ax = plt.subplots()
+    # plot water content in all vertical compartments
     cax = ax.imshow(data, interpolation='none', cmap="Spectral", extent=[
-                    0, len(root), -1, 0], aspect="auto")
+        0, len(root), -1, 0], aspect="auto")
+
+    # plot depth of root
     reversedRoot = -1 * root
     ax.plot(reversedRoot)
 
+    # load log data
+    algLog = AlgorithmLog()
+    logHeader = tuple(algLog.getHeader())
+    logData = np.genfromtxt(
+        logDataPath, delimiter=',', skip_header=3,
+        dtype=float, names=logHeader)
+
     # plot sensor0 track
-    if sensor0TrackList:
-        # print(sensor0TrackList)
-        revSensor0TrackList = -1 * \
-            (np.array(sensor0TrackList) * 10 + 5) * 0.01
-        ax.plot(revSensor0TrackList, color="red")
+    revSensor0TrackList = -1 * \
+        (np.array(logData['sensor0_depth']) * 10 + 5) * 0.01
+    ax.plot(revSensor0TrackList, color="red")
 
     # plot sensor1 track
-    if sensor1TrackList:
-        revSensor1TrackList = -1 * \
-            (np.array(sensor1TrackList) * 10 + 5) * 0.01
-        ax.plot(revSensor1TrackList, color="green")
+    # revSensor1TrackList = -1 * \
+    #     (np.array(logData['sensor1_depth']) * 10 + 5) * 0.01
+    # ax.plot(revSensor1TrackList, color="green")
 
+    # color bar
     cbar = fig.colorbar(cax, orientation='horizontal')
+
     ax.set_xlabel('Time(day)')
     ax.set_ylabel('Soil Depth(m)')
     ax.set_title("sensor0 start at {}cm and ref={}")
     pathFigureOut = str(Path(
-        prefixOutput + r'{}_All_WC_root.png'.format(basename(csvSourceFile).split('.')[0])).resolve())
+        prefixOutput + r'{}_All_WC_root.png'.format(
+            basename(dayDataPath).split('.')[0])).resolve())
     plt.savefig(pathFigureOut)
     plt.clf()
 
 
-def plot_controller_status():
-    pass
+def plot_irrigation(logDataPath):
 
-
-def plot_irrigation():
-    pass
+    # load log data
+    algLog = AlgorithmLog()
+    logHeader = tuple(algLog.getHeader())
+    logData = np.genfromtxt(
+        logDataPath, delimiter=',', skip_header=3,
+        dtype=float, names=logHeader)
+    name = basename(logDataPath).split('.')[0]
+    fig, ax = plt.subplots()
+    ax.scatter(logData['dayCount'], logData['Irri'])
+    ax.set_xlabel('Time(day)')
+    ax.set_ylabel('Irrigation(mm)')
+    ax.set_title('Irrigation of {}'.format(name))
+    pathFigureOut = str(Path(
+        prefixOutput + r'{}_irri.png'.format(name)).resolve())
+    plt.savefig(pathFigureOut)
+    plt.clf()

@@ -2,13 +2,49 @@ import numpy as np
 import helper as helper
 import datetime
 import plot as myPloyLib
-from Controller.MIController import MIController
-from Controller.MIController import SimpleController
-from settings import ConfigHolder
+from Controller.Controller import SimpleController
+from Controller.Controller import SimpleController
+from Configuration import ConfigHolder
 from Simulator.EnvSimulator import EnvSimulator
+from Algorithm.AlgorithmLog import AlgorithmLog
+import plot as myplot
 
 
-if __name__ == "__main__":
+def initilzieController(config, ref):
+
+    sensor0 = 0
+    initialRef = ref
+
+    soilProperityDict = {"sat": 50, "fc": 30, "pwp": 10}
+    soilProfile = {"compartment_num": config["compartment_num"]}
+    sensorIntepret = {"controlDepth": sensor0}
+    simpleCtl = SimpleController(
+        soilProperityDict, soilProfile, sensorIntepret)
+
+    # Initialize reference of all layer
+    refsArray = np.zeros(soilProfile['compartment_num'])
+    refsArray[sensor0] = initialRef
+    simpleCtl.set_ref(refsArray)
+
+    # intialize PID k in all layer, Set Kp,Ki,Kd cefficient
+    kArray = np.zeros((3, soilProfile['compartment_num']))
+    kArrayIndex = simpleCtl.get_kArray_index()
+    ku = 4
+    tu = 0.7
+    for i in range(0, soilProfile['compartment_num']):
+        kArray[kArrayIndex['p'], i] = 0.45 * ku
+        kArray[kArrayIndex['i'], i] = 0
+        kArray[kArrayIndex['i'], i] = tu / 2
+        kArray[kArrayIndex['d'], i] = 0
+        # kArray[kArrayIndex['d'],sensor0]=tu/8
+        simpleCtl.set_k(kArray)
+
+    # Set windup
+    simpleCtl.set_windup(50)
+    return simpleCtl
+
+
+def run_simulation(dynamicRef, mp, simulationName):
 
     project = 'TOMATO2'
     envSimu = EnvSimulator(project)
@@ -20,48 +56,14 @@ if __name__ == "__main__":
     #
     # Initialize Controller
     #
-    depth = 0
-    ref = 20
-    originalRef = ref
-    predictedIrri = 0
-    soilProperityDict = {"sat": 50, "fc": 30, "pwp": 10}
-    soilProfile = {"compartmentNum": 10}
-    sensorIntepret = {"controlDepth": depth}
-    simpleCtl = SimpleController(
-        soilProperityDict, soilProfile, sensorIntepret)
-
-    # Initialize reference of all layer
-    refsArray = np.zeros(soilProfile['compartmentNum'])
-    refsArray[depth] = ref
-    simpleCtl.set_ref(refsArray)
-
-    # intialize PID k in all layer, Set Kp,Ki,Kd cefficient
-    kArray = np.zeros((3, soilProfile['compartmentNum']))
-    kArrayIndex = simpleCtl.get_kArray_index()
-    ku = 4
-    tu = 0.7
-    for i in range(0, soilProfile['compartmentNum']):
-        kArray[kArrayIndex['p'], i] = 0.45 * ku
-        kArray[kArrayIndex['i'], i] = 0
-        kArray[kArrayIndex['i'], i] = tu / 2
-        kArray[kArrayIndex['d'], i] = 0
-        # kArray[kArrayIndex['d'],depth]=tu/8
-        simpleCtl.set_k(kArray)
-    print("PID K")
-    print(kArray)
-
-    # Set windup
-    simpleCtl.set_windup(50)
-
+    simpleCtl = initilzieController(config, dynamicRef)
+    refsArray = simpleCtl.get_ref()
+    sensor0 = simpleCtl.get_controDepth()
+    dynamicRef = refsArray[sensor0]
     #
-    # end of intialize controller
+    # initilize algorithm log
     #
-
-    # declare controller output
-    statusList = []
-    statusList.append("day,sensor0depth,sensor1depth\n")
-    sensor0TrackList = []
-    sensor1TrackList = []
+    al = AlgorithmLog()
 
     #
     # simulation main loop the whole season
@@ -69,81 +71,63 @@ if __name__ == "__main__":
     while not envSimu.isFinish():
 
         print("\nDay Count: {}".format(envSimu.currentDayCount))
+
         envSimu.loadResult()
 
         # print("WCs:")
         # print(envSimu.getCurrentDayWCs())
         WCs = envSimu.getCurrentDayWCs()
 
-        # irrHistory = envSimu.getIrrigationHistory()
-        # print(WCs[0])
-
-        """
-            Methodology Part:
-            If moisture condition triggers irrigation event, controller to generate irrigation amount
-        """
-
-        # # IrriHistory
-
-        # if envSimu.currentDayCount == 0:
-        #     yesterIrrStr = "No yesterday"
-        # else:
-        #     yesterdayIdx = envSimu.currentDayCount - 1
-        #     yesterIrrStr = str(irrHistory[yesterdayIdx])
+        ##
+        #    Methodology Part:
+        #    If moisture condition triggers irrigation event, controller to generate irrigation amount
+        ###
 
         ##
         # Find floating EWC( Efficient Wetting Zone )
         ##
-        halfRootDepth = envSimu.getCurrentRootDepth() * 0.1
-        compartmentBoundary = config['compartmentBoundary']
+        halfRootDepth = envSimu.getCurrentRootDepth() * mp
+        compartment_boundary_list = config['compartment_boundary_list']
         closestCompartment = helper.calEWZbyCompartment(
-            compartmentBoundary, halfRootDepth)
+            compartment_boundary_list, halfRootDepth)
         sensor0 = int(closestCompartment * 10 - 1)
 
-        print("moving sensor0: {}".format(sensor0))
+        # print("moving sensor0: {}".format(sensor0))
         simpleCtl.set_controlDepth(sensor0)
-        sensor0TrackList.append(sensor0)
 
         ##
         # *self-adapt with sensor0 and sensor1
         ##
-        sensor1 = sensor0 + 3
-        sensor1TrackList.append(sensor1)
-
+        sensor1 = 0
+        #
         # update ref0
+        #
         # if WCs[sensor1] > 20 and refsArray[sensor0] > 28:
-        #     ref = ref - 1
-        refsArray[sensor0] = ref
-
-        # # global static ref0
-        # staticRef0 = [35, 32, 31, 30, 29]
-        # staticRef0 = [35, 33, 32, 31, 30]
-        # refsArray[sensor0] = staticRef0[sensor0]
-        # ref = staticRef0[sensor0]
-        # Display adaptive ref of sensor0
-        print("sensor0 Ref: {}".format(ref))
+        #     dynamicRef = dynamicRef - 1
+        refsArray[sensor0] = dynamicRef
         simpleCtl.set_ref(refsArray)
+        # Display adaptive dynamicRef of sensor0
+        print("sensor0 Ref: {}".format(dynamicRef))
 
-        # notate current sensor0 and sensor1 in soil layer
-        print("WCs:")
-        strWCs = list(map(str, envSimu.getCurrentDayWCs()))
-        strWCs[sensor0] = "*" + strWCs[sensor0]
-        # strWCs[sensor1] = "$" + strWCs[sensor1]
-        print(strWCs)
+        # # notate current sensor0 and sensor1 in soil layer
+        # print("WCs:")
+        # strWCs = list(map(str, envSimu.getCurrentDayWCs()))
+        # strWCs[sensor0] = "*" + strWCs[sensor0]
+        # # strWCs[sensor1] = "$" + strWCs[sensor1]
+        # print(strWCs)
 
-        print("Refs:")
-        strRefsArray = list(map(str, refsArray))
-        strRefsArray[sensor0] = "*" + strRefsArray[sensor0]
-        # strRefsArray[sensor1] = "$" + strRefsArray[sensor1]
-        print(strRefsArray)
+        # print("Refs:")
+        # strRefsArray = list(map(str, simpleCtl.get_ref()))
+        # strRefsArray[sensor0] = "*" + strRefsArray[sensor0]
+        # # strRefsArray[sensor1] = "$" + strRefsArray[sensor1]
+        # print(strRefsArray)
 
-        print("Error:")
-        strErrors = list(map(str, simpleCtl.get_error(WCs)))
-        strErrors[sensor0] = "*" + strErrors[sensor0]
-        # strErrors[sensor1] = "$" + strErrors[sensor1]
-        print(strErrors)
+        # print("Error:")
+        # strErrors = list(map(str, simpleCtl.get_error(WCs)))
+        # strErrors[sensor0] = "*" + strErrors[sensor0]
+        # # strErrors[sensor1] = "$" + strErrors[sensor1]
+        # print(strErrors)
 
-        
         ##
         # -- ET-base Irrigation --
         ##
@@ -158,31 +142,86 @@ if __name__ == "__main__":
         predictedIrri = simpleCtl.get_output(WCs)
         controllerStatus = simpleCtl.get_status(WCs)
 
-        statusList.append("{},{},{}".format(envSimu.getCurrentDayCount(), sensor0, sensor1))
+        logIrri = 0
         if predictedIrri > 0:
-
+            logIrri = predictedIrri
+            # irri Day is  currentDatCount add one due to we use
+            # today's condition to decide tomorrow's irrigation amount
             irriDay = envSimu.currentDayCount + 1
-            print("IrriDay: {}".format(irriDay))
-            print("To Irrigate: {}".format(predictedIrri))
+            # print("IrriDay: {}".format(irriDay))
+            # print("To Irrigate: {}".format(predictedIrri))
             helper.appendDotIRR('Example.Irr', irriDay, predictedIrri)
             envSimu.runOnce()
 
+        logDict = {"dayCount": envSimu.currentDayCount + 1,
+                   "WCs": envSimu.getCurrentDayWCs(),
+                   "refs": simpleCtl.get_ref(),
+                   "error": simpleCtl.get_error(WCs),
+                   "pidk": simpleCtl.get_k(),
+                   "sensor0_depth": sensor0,
+                   "sensor1_depth": sensor1,
+                   "irri": logIrri,
+                   "CC": envSimu.getCurrentDayData()[29],
+                   "Biomass": envSimu.getCurrentDayData()[36]}
+
+        al.log(logDict)
         envSimu.increateTimeStep()
 
     # End the while loop
 
-    # Write out the result
-    sharedInfoPath = r"D:\yk_research\AquaCrop-Irrigation-Design\output\moving_control_point\shared_info.json"
-    sharedInfo = helper.readSharedInfo(sharedInfoPath)
+    # write out the day and season .csv file
+    fileName = simulationName
+    envSimu.writeOutResult(project, fileName)
 
-    simulationName = "depth{}_ref{}_moving_{}".format(
-        depth, originalRef, sharedInfo["current_unique_id"])
-    envSimu.writeOutResult(project, simulationName)
-    helper.increaseIdSharedInfo(sharedInfoPath)
+    # Write out algorithm log file to csv
+    seasonDataPath = r"D:\yk_research\AquaCrop-Irrigation-Design\output\{}_season.csv".format(
+        fileName)
+    seasonData = helper.loadSeasonCSV(seasonDataPath)
 
-    # create single experiment notes
-    # expJSONdestPath = "D:\yk_research\AquaCrop-Irrigation-Design\output\moving_control_point\{}.json".format(simulationName))
-    # helper.createExpJSON(sharedInfoPath, expJSONdestPath)
+    algInfo = {'sensor0': 'sensor0', 'sensor1': 'sensor1',
+               'ref0': 'ref0', 'ref1': 'ref1'}
+    summary = {"yield": seasonData['Yield']
+               [-1], "water": seasonData['Irri'][-1]}
+    al.writeLogToCSV(algInfo, summary, fileName)
 
-    # Plot WC color diagram
-    myPloyLib.plot_img_test(sensor0TrackList, sensor1TrackList)
+
+if __name__ == "__main__":
+
+    #     dynamicRef = 35
+    #     mp = 0.9
+    #     run_simulation(dynamicRef, mp, "default")
+
+    moving_presentage = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    references = [35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25]
+
+    # resultList = []
+    for mp in moving_presentage:
+        for ref in references:
+
+            print("start ref:{}, moving presentage:{}".format(ref, mp))
+
+            # acquire an unique id for simulation
+            sharedInfoPath = r"D:\yk_research\AquaCrop-Irrigation-Design\output\moving_control_point\shared_info.json"
+            sharedInfo = helper.readSharedInfo(sharedInfoPath)
+
+            simulationName = "{}ref_{}mp_{}id".format(
+                ref, str(mp).replace('.', ''), sharedInfo["current_unique_id"])
+            run_simulation(ref, mp, simulationName)
+
+            # result = helper.extractYieldandTotalIrri(simulationName)
+            # result['ref'] = ref
+            # result['mp'] = mp
+            # resultList.append(result)
+
+            print("finish ref:{}, moving presentage:{}".format(ref, mp))
+
+            # maintain an unique id for each simulation
+            helper.increaseIdSharedInfo(sharedInfoPath)
+
+            # plot
+            dayDataPath = r'D:\yk_research\AquaCrop-Irrigation-Design\output\{}_day.csv'.format(
+                simulationName)
+            logDataPath = r'D:\yk_research\AquaCrop-Irrigation-Design\output\{}_log.csv'.format(
+                simulationName)
+            myplot.plot_WC_layers(dayDataPath, logDataPath)
+            myplot.plot_irrigation(logDataPath)
