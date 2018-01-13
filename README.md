@@ -23,7 +23,7 @@ If you need a lightweight developing environment for windows virtual mahcine, ch
 2. Change directory to __cd python_src/__ 
 3. Run __python main.py__ to conduct the Irrigation Method Design by AquaCrop Simulation 
 
-# Limitaion
+# Limitation
 
 ## AquaCrop
 
